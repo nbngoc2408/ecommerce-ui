@@ -1,34 +1,28 @@
 import { useEffect, useState } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
 import { Link } from 'react-router-dom'
+import { fetchProductsAsync, selectProducts, selectProductsError, selectProductsStatus } from '../feature/products/productsSlice'
 
 export default function ProductList() {
-  const [products, setProducts] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  // const [products, setProducts] = useState([])
+  const products = useSelector(selectProducts);
+  const status = useSelector(selectProductsStatus);
+  const error = useSelector(selectProductsError);
+  const dispatch = useDispatch();
   const [search, setSearch] = useState('')
 
   useEffect(() => {
     // Simulate API call
-    setTimeout(() => {
-      try {
-        setProducts([
-          { id: 1, name: 'Product A', price: 19.99 },
-          { id: 2, name: 'Product B', price: 29.99 },
-        ])
-        setLoading(false)
-      // eslint-disable-next-line no-unused-vars
-      } catch (e) {
-        setError('Failed to load products.')
-        setLoading(false)
-      }
-    }, 1000)
-  }, [])
+    if (status === 'idle') {
+      dispatch(fetchProductsAsync());
+    }
+  }, [status, dispatch])
 
   const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(search.toLowerCase())
+    product.sku.toLowerCase().includes(search.toLowerCase())
   )
 
-  if (loading) {
+  if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-white">
         <div className="text-indigo-600 text-xl font-semibold animate-pulse">Loading products...</div>
@@ -36,7 +30,7 @@ export default function ProductList() {
     )
   }
 
-  if (error) {
+  if (status === 'failed') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-white">
         <div className="bg-white p-8 rounded-xl shadow-lg text-center text-red-600 text-xl font-semibold">
@@ -73,7 +67,7 @@ export default function ProductList() {
                 <div className="w-28 h-28 bg-indigo-100 rounded-full mb-6 flex items-center justify-center text-4xl text-indigo-400 shadow-inner">
                   <span role="img" aria-label="box">📦</span>
                 </div>
-                <h3 className="text-2xl font-semibold mb-2 text-gray-900 tracking-wide">{product.name}</h3>
+                <h3 className="text-2xl font-semibold mb-2 text-gray-900 tracking-wide">{product.sku}</h3>
                 <span className="mb-4 text-xl text-indigo-700 font-bold">${product.price}</span>
                 <Link
                   to={`/product/${product.id}`}
